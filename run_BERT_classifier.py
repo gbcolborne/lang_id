@@ -117,14 +117,14 @@ class CLIProcessor(DataProcessor):
     def get_train_examples(self, data_dir):
         """See base class."""
         examples = self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+            self._read_tsv(os.path.join(data_dir, "train.txt")), "train")
         np.random.shuffle(examples)
         return examples
 
     def get_dev_examples(self, data_dir):
         """See base class."""
         examples = self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+            self._read_tsv(os.path.join(data_dir, "dev.txt")), "dev")
         return examples
 
     def get_test_examples(self, data_dir):
@@ -328,17 +328,18 @@ def predict(model, test_dataloader, device):
     model.train()
     return predictions
 
-
-
-def main():
-    parser = argparse.ArgumentParser()
+def make_arg_parser(initial_parser=None):
+    if initial_parser is None:
+        parser = argparse.ArgumentParser()
+    else:
+        parser = initial_parser
 
     ## Required parameters
     parser.add_argument("--data_dir",
                         default=None,
                         type=str,
                         required=True,
-                        help="The input data dir. Should contain files named train.tsv, dev.tsv, and/or test.txt, depending on whether we are doing training, evaluation or prediction.")
+                        help="The input data dir. Should contain files named train.txt, dev.txt, and/or test.txt, depending on whether we are doing training, evaluation or prediction.")
     parser.add_argument("--bert_model_or_config_file", 
                         default=None, 
                         type=str, 
@@ -363,13 +364,13 @@ def main():
                              "than this will be padded.")
     parser.add_argument("--do_train",
                         action='store_true',
-                        help="Whether to run training.")
+                        help="Whether to run training on the labeled training set (train.txt).")
     parser.add_argument("--do_eval",
                         action='store_true',
-                        help="Whether to run eval on the dev set.")
+                        help="Whether to run eval on the labeled dev set (dev.txt) during training (if applicable) and at the end..")
     parser.add_argument("--do_predict",
                         action='store_true',
-                        help="Whether to run prediction on the test set.")
+                        help="Whether to run prediction on the unlabeled test set (test.txt) at the end.")
     parser.add_argument("--train_batch_size",
                         default=32,
                         type=int,
@@ -417,6 +418,11 @@ def main():
                              "Positive power of 2: static loss scaling value.\n")
     parser.add_argument('--server_ip', type=str, default='', help="Can be used for distant debugging.")
     parser.add_argument('--server_port', type=str, default='', help="Can be used for distant debugging.")
+
+    return parser
+
+def main():
+    parser = make_arg_parser()
     args = parser.parse_args()
 
     if args.server_ip and args.server_port:
@@ -567,9 +573,7 @@ def main():
                              t_total=num_train_optimization_steps)
 
             
-    # Get evaluation data (we assume its validation data if do_train
-    # is also true, and evaluate the model on this data after each
-    # epoch)
+    # Get dev data
     if args.do_eval:
         eval_examples = processor.get_dev_examples(args.data_dir)
         eval_features = convert_examples_to_features(
@@ -694,7 +698,7 @@ def main():
                   'loss': loss}
 
         # Write evaluation results
-        output_eval_file = os.path.join(args.output_dir, "eval_results.txt")
+        output_eval_file = os.path.join(args.output_dir, "dev_results.txt")
         with open(output_eval_file, "w") as writer:
             logger.info("***** Eval results *****")
             for key in sorted(result.keys()):
@@ -702,7 +706,7 @@ def main():
                 writer.write("%s = %s\n" % (key, str(result[key])))
 
         # Write predictions
-        output_pred_file = os.path.join(args.output_dir, "eval_pred.txt")
+        output_pred_file = os.path.join(args.output_dir, "dev_pred.txt")
         with open(output_pred_file, "w") as writer:
             for label_id in predictions:
                 label = label_list[label_id]
