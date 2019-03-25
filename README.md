@@ -8,7 +8,7 @@ This code was developed for the shared task on cuneiform language identification
 * Python 3 (tested using version 3.7.1)
 * PyTorch (tested using version 1.0.0)
 * [pytorch-pretrained-bert](https://github.com/huggingface/pytorch-pretrained-BERT/tree/master/examples) (tested using version 0.5.1)
-* Other? If so, please let me know.
+* Anything missing? Please let me know.
 
 
 
