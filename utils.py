@@ -51,3 +51,17 @@ class CuneiformCharTokenizer():
     def convert_tokens_to_ids(self, chars):
         return [self.vocab[c] if c in self.vocab else self.vocab["[UNK]"] for c in chars]
     
+
+
+def load_labeled_data(path):
+    """ Load labeled data """
+    texts = []
+    labels = []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if len(line):
+                 text, label = line.split("\t")
+                 texts.append(text)
+                 labels.append(label)
+    return texts, labels
