@@ -102,7 +102,7 @@ class DataProcessor(object):
     @classmethod
     def _read_tsv(cls, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with open(input_file, "r") as f:
+        with open(input_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
             lines = []
             for line in reader:
@@ -722,7 +722,7 @@ def main():
 
         # Write predictions
         output_pred_file = os.path.join(args.output_dir, "dev_pred.txt")
-        with open(output_pred_file, "w") as writer:
+        with open(output_pred_file, "w", encoding="utf-8") as writer:
             for label_id in predictions:
                 label = label_list[label_id]
                 writer.write(label + "\n")
@@ -746,7 +746,7 @@ def main():
 
         # Write predictions
         output_pred_file = os.path.join(args.output_dir, "test_pred.txt")
-        with open(output_pred_file, "w") as writer:
+        with open(output_pred_file, "w", encoding="utf-8") as writer:
             for label_id in predictions:
                 label = label_list[label_id]
                 writer.write(label + "\n")
