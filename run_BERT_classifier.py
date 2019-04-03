@@ -313,6 +313,18 @@ def evaluate(model, eval_dataloader, device):
 
     return pred, loss, accuracy, fscore
 
+def save_model(model, tokenizer, output_dir):
+    # Save model 
+    model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model itself
+    output_model_file = os.path.join(output_dir, WEIGHTS_NAME)
+    torch.save(model_to_save.state_dict(), output_model_file)
+    output_config_file = os.path.join(output_dir, CONFIG_NAME)
+    with open(output_config_file, 'w') as f:
+        f.write(model_to_save.config.to_json_string())
+    output_tokenizer_file = os.path.join(output_dir, "tokenizer.pkl")
+    with open(output_tokenizer_file, "wb") as f:
+        pickle.dump(tokenizer, f)
+
 def predict(model, test_dataloader, device):
     model.eval()
     predictions = []
@@ -617,6 +629,7 @@ def main():
             else:
                 f.write("Steps\tTrainLoss\n")
 
+        best_val_score = float("-inf")
         model.train()
         for _ in trange(int(args.num_train_epochs), desc="Epoch"):
             tr_loss = 0
@@ -658,33 +671,35 @@ def main():
                 log_data.append("{:.5f}".format(eval_loss))
                 log_data.append("{:.5f}".format(eval_accuracy))
                 log_data.append("{:.5f}".format(fscore))
+                # Check if score has improved
+                if fscore > best_val_score:
+                    best_val_score = fscore
+                    save_model(model, tokenizer, args.output_dir)
+            else:
+                # If we can't validate, we save model at each epoch
+                save_model(model, tokenizer, args.output_dir)
 
             # Log
             with open(output_log_file, "a") as f:
                 f.write("\t".join(log_data)+"\n")
 
+    # Load model
     if args.do_train:
-        # Save a trained model and the associated configuration
-        model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
+        # Load model we just fine-tuned
         output_model_file = os.path.join(args.output_dir, WEIGHTS_NAME)
-        torch.save(model_to_save.state_dict(), output_model_file)
         output_config_file = os.path.join(args.output_dir, CONFIG_NAME)
-        with open(output_config_file, 'w') as f:
-            f.write(model_to_save.config.to_json_string())
         output_tokenizer_file = os.path.join(args.output_dir, "tokenizer.pkl")
-        with open(output_tokenizer_file, "wb") as f:
-            pickle.dump(tokenizer, f)
-
-        # Load a trained model and config that you have fine-tuned
         config = BertConfig(output_config_file)
         model = BertForSequenceClassification(config, num_labels=num_labels)
         model.load_state_dict(torch.load(output_model_file))
         with open(output_tokenizer_file, "rb") as f:
             tokenizer = pickle.load(f)
     else:
+        # Load a model you fine-tuned previously
         model = BertForSequenceClassification.from_pretrained(args.bert_model_or_config_file, num_labels=num_labels)
     model.to(device)
 
+    # Evaluate model on validation data
     if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
         logger.info("***** Running evaluation *****")
         logger.info("  Num examples = %d", len(eval_examples))
