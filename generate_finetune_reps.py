@@ -8,7 +8,7 @@ INITIAL_SEED = 91500
 
 # Args
 parser = argparse.ArgumentParser()
-parser.add_argument("model_dir")
+parser.add_argument("bert_model_or_config_file")
 parser.add_argument("output_dir")
 parser.add_argument("data_dir")
 parser.add_argument("nb_epochs")
@@ -24,7 +24,7 @@ BASE_CMD = "python run_BERT_classifier.py --max_seq_length 128 --do_train --do_e
 
 # Add constant args to command
 BASE_CMD += " --data_dir {}".format(args.data_dir)
-BASE_CMD += " --bert_model_or_config_file {}".format(args.model_dir)
+BASE_CMD += " --bert_model_or_config_file {}".format(args.bert_model_or_config_file)
 BASE_CMD += " --num_train_epochs {}".format(args.nb_epochs)
 
 # Make commands by copying command, but using a different seed
