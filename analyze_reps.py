@@ -40,6 +40,7 @@ for subdir in os.listdir(args.path_reps):
     scores = get_scores(args.path_gold, path_pred)
     a, p, r, f, wp, wr, wf = scores
     test_scores.append(f)
+print("Nb reps: {}".format(len(test_scores)))
 
 # Compute mean scores
 best_dev_scores = []
