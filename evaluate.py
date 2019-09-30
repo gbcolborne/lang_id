@@ -68,7 +68,7 @@ def main():
     parser.add_argument("gold", help="tab-separated gold file")
     parser.add_argument("pred", help="text file containing predicted labels (one per line)")
     args = parser.parse_args()
-    scores = evaluate(args.gold, args.pred)
+    scores = get_scores(args.gold, args.pred)
     a, p, r, f, wp, wr, wf = scores
     print("Unweighted macro-averaged precision: {:.5f}".format(p))
     print("Unweighted macro-averaged recall: {:.5f}".format(r))
