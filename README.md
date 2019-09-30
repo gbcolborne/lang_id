@@ -89,7 +89,7 @@ python run_BERT_classifier.py --data_dir data_unlabeled --bert_model_or_config_f
 5. Evaluate predictions on test set.
 
 ```bash
-python evaluate.py data_labeled/test.txt model_predictions/test.txt
+python evaluate.py data_labeled/test.txt model_predictions/test_pred.txt
 ```
 
 
